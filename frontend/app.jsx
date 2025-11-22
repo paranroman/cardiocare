@@ -11,6 +11,9 @@ export default function App() {
   const [riskProb, setRiskProb] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // API URL dari environment variable atau default localhost
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   const [formData, setFormData] = useState({
     age: '',
     male: '1', 
@@ -44,7 +47,7 @@ export default function App() {
     try {
       // Mengirim data mentah (kategori) ke Python
       // Python yang akan melakukan konversi ke angka
-      const response = await fetch('http://localhost:5000/predict', {
+      const response = await fetch(`${API_URL}/predict`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
