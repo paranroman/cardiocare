@@ -71,7 +71,20 @@ def preprocess_input(data):
     
     return np.array([input_vector])
 
-# --- 3. ENDPOINT API PREDIKSI ---
+# --- 3. HEALTH CHECK ENDPOINT ---
+@app.route('/', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'ok',
+        'message': 'CardioCare AI Backend is running',
+        'model_loaded': model is not None,
+        'endpoints': {
+            'health': '/',
+            'predict': '/predict (POST only)'
+        }
+    })
+
+# --- 4. ENDPOINT API PREDIKSI ---
 @app.route('/predict', methods=['POST'])
 def predict():
     if not model:
