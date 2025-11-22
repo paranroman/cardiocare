@@ -8,13 +8,10 @@ app = Flask(__name__)
 # Mengizinkan Frontend (port 5173) untuk mengakses Backend (port 5000)
 CORS(app, resources={
     r"/*": {
-        "origins": [
-            "http://localhost:5173",
-            "https://*.vercel.app",
-            "https://vercel.app"
-        ],
+        "origins": "*",  # Allow all origins for now
         "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": False
     }
 }) 
 
@@ -85,8 +82,16 @@ def health_check():
     })
 
 # --- 4. ENDPOINT API PREDIKSI ---
-@app.route('/predict', methods=['POST'])
+@app.route('/predict', methods=['POST', 'OPTIONS'])
 def predict():
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response, 200
+    
     if not model:
         return jsonify({'status': 'error', 'message': 'Model belum dimuat. Cek file hypertension_model.json.'}), 503
 
@@ -108,15 +113,19 @@ def predict():
         # Konversi ke prediksi binary (0 atau 1) dengan threshold 0.5
         prediction = 1 if probability > 0.5 else 0
         
-        return jsonify({
+        response = jsonify({
             'status': 'success',
             'prediction': int(prediction),
             'risk_probability': float(probability) * 100 # Dalam persen
         })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
 
     except Exception as e:
         print("Error saat prediksi:", e)
-        return jsonify({'status': 'error', 'message': f'Gagal memproses prediksi: {str(e)}'}), 500
+        error_response = jsonify({'status': 'error', 'message': f'Gagal memproses prediksi: {str(e)}'})
+        error_response.headers.add('Access-Control-Allow-Origin', '*')
+        return error_response, 500
 
 if __name__ == '__main__':
     # Pastikan server berjalan di port 5000
