@@ -10,6 +10,7 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [riskProb, setRiskProb] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
+  const [validationError, setValidationError] = useState('');
 
   // API URL dari environment variable atau default localhost
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -37,7 +38,7 @@ export default function App() {
   // --- INTEGRASI KE FLASK ---
   const handlePredict = async () => {
     if (!formData.age) {
-      alert("Mohon isi usia Anda.");
+      setErrorMsg("Mohon isi usia Anda.");
       return;
     }
 
@@ -76,6 +77,7 @@ export default function App() {
     setResult(null);
     setStep(1);
     setErrorMsg('');
+    setValidationError('');
     setFormData({
       age: '', male: '1', currentSmoker: '0', cigsPerDay: '',
       BPMeds: '0', diabetes: '0', bmi_choice: 'normal',
@@ -134,7 +136,7 @@ export default function App() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Usia</label>
+                        <label className="text-sm font-medium text-slate-700">Usia <span className="text-red-500">*</span></label>
                         <input type="number" name="age" placeholder="Contoh: 45" value={formData.age} onChange={handleChange} className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" />
                       </div>
                     </div>
@@ -145,9 +147,18 @@ export default function App() {
                         <label className="flex gap-2 cursor-pointer"><input type="radio" name="currentSmoker" value="1" checked={formData.currentSmoker === '1'} onChange={handleChange} /> Ya</label>
                       </div>
                       {formData.currentSmoker === '1' && (
-                        <input type="number" name="cigsPerDay" placeholder="Batang per hari" value={formData.cigsPerDay} onChange={handleChange} className="w-full p-3 border rounded-xl" />
+                        <div>
+                          <input type="number" name="cigsPerDay" placeholder="Batang per hari *" value={formData.cigsPerDay} onChange={handleChange} className="w-full p-3 border rounded-xl" />
+                        </div>
                       )}
                     </div>
+                    
+                    {validationError && (
+                      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-start gap-2">
+                        <AlertTriangle size={20} className="mt-0.5 flex-shrink-0" />
+                        <span>{validationError}</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -173,14 +184,14 @@ export default function App() {
                     </div>
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="p-4 border rounded-xl hover:bg-slate-50">
-                        <div className="flex gap-2 font-medium mb-2"><Pill size={18} className="text-purple-500"/> Obat Tensi</div>
+                        <div className="flex gap-2 font-medium mb-2"><Pill size={18} className="text-purple-500"/> Pakai Obat Tensi</div>
                         <div className="flex gap-4 text-sm">
                            <label className="flex gap-2"><input type="radio" name="BPMeds" value="0" checked={formData.BPMeds === '0'} onChange={handleChange}/> Tidak</label>
                            <label className="flex gap-2"><input type="radio" name="BPMeds" value="1" checked={formData.BPMeds === '1'} onChange={handleChange}/> Ya</label>
                         </div>
                       </div>
                       <div className="p-4 border rounded-xl hover:bg-slate-50">
-                        <div className="flex gap-2 font-medium mb-2"><AlertTriangle size={18} className="text-orange-500"/> Riwayat Diabetes</div>
+                        <div className="flex gap-2 font-medium mb-2"><AlertTriangle size={18} className="text-orange-500"/> Ada Riwayat Diabetes</div>
                         <div className="flex gap-4 text-sm">
                            <label className="flex gap-2"><input type="radio" name="diabetes" value="0" checked={formData.diabetes === '0'} onChange={handleChange}/> Tidak</label>
                            <label className="flex gap-2"><input type="radio" name="diabetes" value="1" checked={formData.diabetes === '1'} onChange={handleChange}/> Ya</label>
@@ -247,8 +258,13 @@ export default function App() {
                   
                   {step < 3 ? (
                     <button onClick={() => {
+                      setValidationError('');
                       if (step === 1 && !formData.age) {
-                        alert("Mohon isi usia Anda terlebih dahulu.");
+                        setValidationError("Mohon isi usia Anda terlebih dahulu.");
+                        return;
+                      }
+                      if (step === 1 && formData.currentSmoker === '1' && !formData.cigsPerDay) {
+                        setValidationError("Mohon isi jumlah batang rokok per hari.");
                         return;
                       }
                       setStep(step + 1);
