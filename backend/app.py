@@ -6,7 +6,17 @@ import os
 
 app = Flask(__name__)
 # Mengizinkan Frontend (port 5173) untuk mengakses Backend (port 5000)
-CORS(app) 
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "http://localhost:5173",
+            "https://*.vercel.app",
+            "https://vercel.app"
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+}) 
 
 # --- 1. LOAD MODEL ---
 model = None
